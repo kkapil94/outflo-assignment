@@ -10,7 +10,7 @@ const messageApi = {
   ): Promise<PersonalizedMessage> => {
     try {
       const response = await axios.post<ApiResponse<PersonalizedMessage>>(
-        `${API_URL}/personalized-message`,
+        `${API_URL}/campaigns/gen-msg`,
         profileData
       );
       return response.data.data;
