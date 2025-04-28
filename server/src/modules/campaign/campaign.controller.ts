@@ -1,8 +1,9 @@
 import { Request, Response } from "express";
 import { campaignService } from "../../services/campaignService";
 import { errorResponse, successResponse } from "../../utils/reponseHandler";
-import { CampaignStatus } from "../../types";
+import { CampaignStatus, ILinkedInProfile } from "../../types";
 import mongoose from "mongoose";
+import { aiService } from "../../services/aiService";
 
 export const getCampaigns = async (
   req: Request,
@@ -146,5 +147,47 @@ export const deleteCampaign = async (
     successResponse(res, deletedCampaign, "Campaign deleted successfully");
   } catch (error) {
     errorResponse(res, "Failed to delete campaign", 500, error);
+  }
+};
+
+export const generatePersonalizedMessage = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const profileData: ILinkedInProfile = req.body;
+
+    // Validate the required fields
+    const requiredFields = [
+      "name",
+      "job_title",
+      "company",
+      "location",
+      "summary",
+    ];
+    const missingFields = requiredFields.filter(
+      (field) => !profileData[field as keyof ILinkedInProfile]
+    );
+
+    if (missingFields.length > 0) {
+      errorResponse(
+        res,
+        `Missing required fields: ${missingFields.join(", ")}`,
+        400
+      );
+      return;
+    }
+
+    const personalizedMessage = await aiService.generatePersonalizedMessage(
+      profileData
+    );
+    successResponse(
+      res,
+      personalizedMessage,
+      "Personalized message generated successfully"
+    );
+  } catch (error) {
+    console.log("Error in generatePersonalizedMessage controller:", error);
+    errorResponse(res, "Failed to generate personalized message", 500, error);
   }
 };
